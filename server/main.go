@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	pb "buffers/number" // Substitua pelo caminho real para suas definições protobuf
+	pb "github.com/souzjfe/grpc-golang-python/proto" // Substitua pelo caminho real para suas definições protobuf
 
 	"google.golang.org/grpc"
 )

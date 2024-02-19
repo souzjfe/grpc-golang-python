@@ -4,7 +4,7 @@
 // - protoc             v4.25.2
 // source: number.proto
 
-package number
+package proto
 
 import (
 	context "context"

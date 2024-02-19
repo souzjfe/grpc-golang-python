@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "buffers/number";
+option go_package = "github.com/souzjfe/grpc-golang-python/proto";
 
 package number;
 
