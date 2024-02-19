@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "buffers/number";
+
+package number;
+
+service Number {
+    rpc SendNumber(NumberRequest) returns (MaxNumberResponse) {}
+}
+
+message NumberRequest {
+    int32 number = 1;
+}
+
+message MaxNumberResponse {
+    int32 max_number = 1;
+}
