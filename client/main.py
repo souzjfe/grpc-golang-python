@@ -1,19 +1,24 @@
 import grpc
+import time
 import random
+from math_pb2_grpc import MathStub
+from math_pb2 import Request, Response
+def main():
+    channel = grpc.insecure_channel('localhost:50005')
+    stub = MathStub(channel)
 
-import number_pb2
-import number_pb2_grpc
+    def generate_requests():
+        while True:
+            num = random.randint(0, 100)
+            print("new number {} sent".format(num))
+            yield Request(num=num, name="client")
+            time.sleep(0.2)
 
-def generate_number():
-    return random.randint(1, 100)
+    responses = stub.Max(generate_requests())
 
-def run():
-    channel = grpc.insecure_channel('localhost:50051')
-    stub = number_pb2_grpc.NumberStub(channel)
-    while True:
-        number = generate_number()
-        response = stub.SendNumber(number_pb2.NumberRequest(number=number))
-        print("Maior número registrado até agora:", response.max_number)
+    for response in responses:
+        print("new max {} received".format(response.result))
+        print("name {} received".format(response.name))
 
 if __name__ == '__main__':
-    run()
+    main()

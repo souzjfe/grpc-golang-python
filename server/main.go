@@ -1,34 +1,75 @@
 package main
 
 import (
-	"context"
+	"io"
 	"log"
 	"net"
 
-	pb "github.com/souzjfe/grpc-golang-python/proto" // Substitua pelo caminho real para suas definições protobuf
+	pb "server/protobuffers"
 
 	"google.golang.org/grpc"
 )
 
 type server struct {
-	maxNumber int32
+	pb.UnimplementedMathServer
 }
 
-func (s *server) SendNumber(ctx context.Context, in *pb.NumberRequest) (*pb.MaxNumberResponse, error) {
-	if in.Number > s.maxNumber {
-		s.maxNumber = in.Number
+func (s server) Max(srv pb.Math_MaxServer) error {
+
+	log.Println("start new server")
+	var max int32
+	ctx := srv.Context()
+	for {
+		// srv.Send(&pb.Response{Result: 20, Name: "server"})
+
+		// exit if context is done
+		// or continue
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		// receive data from stream
+		req, err := srv.Recv()
+		if err == io.EOF {
+			// return will close stream from server side
+			log.Println("exit")
+			return nil
+		}
+		if err != nil {
+			log.Printf("receive error %v", err)
+			continue
+		}
+
+		// continue if number reveived from stream
+		// less than max
+		if req.Num <= max {
+			continue
+		}
+
+		// update max and send it to stream
+		max = req.Num
+		resp := pb.Response{Result: max, Name: "server"}
+		if err := srv.Send(&resp); err != nil {
+			log.Printf("send error %v", err)
+		}
+		log.Printf("send new max=%d", max)
 	}
-	return &pb.MaxNumberResponse{MaxNumber: s.maxNumber}, nil
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
+	// create listener
+	lis, err := net.Listen("tcp", ":50005")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	// create grpc server
 	s := grpc.NewServer()
-	pb.RegisterNumberServer(s, &server{maxNumber: 0})
-	log.Println("Server started at :50051")
+	pb.RegisterMathServer(s, &server{})
+
+	// and start...
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
